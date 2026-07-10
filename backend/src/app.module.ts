@@ -10,20 +10,9 @@ import { AuthModule } from './auth/auth.module';
 @Module({
     imports: [
         ConfigModule.forRoot({ isGlobal: true }),
-        MongooseModule.forRootAsync({
-            useFactory: async () => {
-                try {
-                    const { MongoMemoryServer } = await import('mongodb-memory-server');
-                    const mongod = await MongoMemoryServer.create();
-                    const uri = mongod.getUri();
-                    console.log('Using In-Memory MongoDB at:', uri);
-                    return { uri };
-                } catch (err) {
-                    console.error('Failed to start in-memory-mongo', err);
-                    return { uri: 'mongodb://localhost:27017/agile-sim' }; // Fallback
-                }
-            },
-        }),
+        MongooseModule.forRoot(
+            'mongodb://admin:password123@localhost:27017/agile-sim?authSource=admin'
+        ),
         UsersModule,
         ProjectsModule,
         SprintsModule,

@@ -68,8 +68,8 @@ flutter run -d <device-id>
 
 4. In the app, go to Settings -> Backend Connection and set API URL to your computer LAN IP, for example:
 
-```text
-http://192.168.1.25:3001
+```PC LAN address
+http://192.168.114.240:3001
 ```
 
 Do not use `localhost` on a physical phone.
