@@ -12,7 +12,10 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('project detail shows backlog items and sprint CTA', (tester) async {
-    SharedPreferences.setMockInitialValues(<String, Object>{});
+    SharedPreferences.setMockInitialValues(<String, Object>{
+      'cache_tasks_project-1': '[{"id":"task-1","title":"Implement login","description":"","type":"FEATURE","storyPoints":3,"status":"TODO","projectId":"project-1"}]',
+      'cache_projects': '[{"id":"project-1","name":"Mobile Agile","description":"Build mobile parity","ownerId":"u1","currentSprintNumber":1,"members":[],"createdBy":{"id":"u1","name":"Test User","email":"test@user.com"},"status":"ACTIVE","deadline":"2026-12-31T00:00:00.000"}]',
+    });
 
     await tester.pumpWidget(
       const ProviderScope(
@@ -24,6 +27,10 @@ void main() {
 
     expect(find.textContaining('Product Backlog'), findsOneWidget);
     expect(find.textContaining('Implement login'), findsOneWidget);
+
+    await tester.drag(find.byType(ListView), const Offset(0, -600));
+    await tester.pumpAndSettle();
+
     expect(find.textContaining('Plan & Start Sprint'), findsOneWidget);
   });
 }
@@ -40,14 +47,17 @@ class _SeededProjectHostState extends ConsumerState<_SeededProjectHost> {
   void initState() {
     super.initState();
     final app = ref.read(appControllerProvider);
-    app.projects = const <ProjectModel>[
+    app.projects = <ProjectModel>[
       ProjectModel(
         id: 'project-1',
         name: 'Mobile Agile',
         description: 'Build mobile parity',
         ownerId: 'u1',
         currentSprintNumber: 1,
-        members: <ProjectMember>[],
+        members: const <ProjectMember>[],
+        createdBy: const ProjectCreator(id: 'u1', name: 'Test User', email: 'test@user.com'),
+        status: 'ACTIVE',
+        deadline: DateTime(2026, 12, 31),
       ),
     ];
 

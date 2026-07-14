@@ -34,7 +34,7 @@ class ProjectsScreen extends ConsumerWidget {
                   crossAxisSpacing: 12,
                   childAspectRatio: width >= 700 ? 1.8 : 2.3,
                 ),
-                itemBuilder: (context, index) {
+                 itemBuilder: (context, index) {
                   final project = app.projects[index];
                   return Card(
                     child: InkWell(
@@ -49,12 +49,33 @@ class ProjectsScreen extends ConsumerWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            Text(project.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.titleMedium),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    project.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(context).textTheme.titleMedium,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                _buildStatusBadge(context, project.status),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Host: ${project.createdBy.name}',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context).colorScheme.outline,
+                                  ),
+                            ),
                             const SizedBox(height: 6),
                             Expanded(
                               child: Text(
                                 project.description.isEmpty ? 'No description' : project.description,
-                                maxLines: 3,
+                                maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
@@ -75,6 +96,43 @@ class ProjectsScreen extends ConsumerWidget {
         onPressed: () => _showCreateProjectDialog(context, ref),
         icon: const Icon(Icons.add),
         label: const Text('New Project'),
+      ),
+    );
+  }
+
+  Widget _buildStatusBadge(BuildContext context, String status) {
+    Color backgroundColor;
+    Color textColor;
+    switch (status.toUpperCase()) {
+      case 'ACTIVE':
+        backgroundColor = Colors.green.shade50;
+        textColor = Colors.green.shade700;
+        break;
+      case 'ENDED':
+        backgroundColor = Colors.blue.shade50;
+        textColor = Colors.blue.shade700;
+        break;
+      case 'ENDED_LATE':
+        backgroundColor = Colors.orange.shade50;
+        textColor = Colors.orange.shade700;
+        break;
+      default:
+        backgroundColor = Colors.grey.shade50;
+        textColor = Colors.grey.shade700;
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        status,
+        style: TextStyle(
+          color: textColor,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }

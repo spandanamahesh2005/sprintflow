@@ -32,4 +32,15 @@ class ApiClient {
     }
     return trimmed;
   }
+
+  Future<Response<Map<String, dynamic>>> endProject(String projectId) {
+    return _dio.patch<Map<String, dynamic>>('/projects/$projectId/end');
+  }
+
+  Future<Response<Map<String, dynamic>>> extendDeadline(String projectId, DateTime newDeadline) {
+    return _dio.patch<Map<String, dynamic>>(
+      '/projects/$projectId/deadline',
+      data: <String, dynamic>{'newDeadline': newDeadline.toIso8601String()},
+    );
+  }
 }

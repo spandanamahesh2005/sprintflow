@@ -227,6 +227,44 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> endProject(String projectId) async {
+    loading = true;
+    error = null;
+    notifyListeners();
+    try {
+      final updated = await _repository.endProject(projectId);
+      final index = projects.indexWhere((p) => p.id == projectId);
+      if (index != -1) {
+        projects[index] = updated;
+      }
+    } catch (e) {
+      error = 'Failed to end project.';
+      rethrow;
+    } finally {
+      loading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> extendDeadline(String projectId, DateTime newDeadline) async {
+    loading = true;
+    error = null;
+    notifyListeners();
+    try {
+      final updated = await _repository.extendDeadline(projectId, newDeadline);
+      final index = projects.indexWhere((p) => p.id == projectId);
+      if (index != -1) {
+        projects[index] = updated;
+      }
+    } catch (e) {
+      error = 'Failed to extend deadline.';
+      rethrow;
+    } finally {
+      loading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> loadBacklog(String projectId) async {
     final tasks = await _repository.fetchBacklog(projectId);
     backlogByProject[projectId] = tasks;

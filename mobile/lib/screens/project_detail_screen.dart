@@ -18,6 +18,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
   final _titleController = TextEditingController();
   final _storyPointsController = TextEditingController(text: '3');
   TaskType _type = TaskType.feature;
+  bool _actionLoading = false;
 
   @override
   void initState() {
@@ -49,6 +50,79 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
       body: ListView(
         padding: EdgeInsets.symmetric(horizontal: width >= 900 ? 24 : 16, vertical: 16),
         children: <Widget>[
+          if (project != null) ...[
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text('Project Info', style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.person, size: 16),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text('Host: ${project.createdBy.name} (${project.createdBy.email})'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        const Icon(Icons.calendar_today, size: 16),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text('Deadline: ${_formatDate(project.deadline)}'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        const Icon(Icons.info_outline, size: 16),
+                        const SizedBox(width: 8),
+                        const Text('Status: '),
+                        _buildStatusBadge(context, project.status),
+                      ],
+                    ),
+                    if (ref.watch(authControllerProvider).user?.id == project.createdBy.id && project.status == 'ACTIVE') ...[
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          if (_actionLoading)
+                            const CircularProgressIndicator()
+                          else ...[
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: () => _endProject(context, project.id),
+                                icon: const Icon(Icons.stop),
+                                label: const Text('End Project'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Theme.of(context).colorScheme.error,
+                                  side: BorderSide(color: Theme.of(context).colorScheme.error),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: FilledButton.icon(
+                                onPressed: () => _extendDeadline(context, project.id, project.deadline),
+                                icon: const Icon(Icons.edit_calendar),
+                                label: const Text('Extend Deadline'),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
           Text('Product Backlog', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 10),
           Card(
@@ -206,6 +280,102 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
           goal: goalController.text.trim(),
           durationDays: duration,
         );
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+
+  Widget _buildStatusBadge(BuildContext context, String status) {
+    Color backgroundColor;
+    Color textColor;
+    switch (status.toUpperCase()) {
+      case 'ACTIVE':
+        backgroundColor = Colors.green.shade50;
+        textColor = Colors.green.shade700;
+        break;
+      case 'ENDED':
+        backgroundColor = Colors.blue.shade50;
+        textColor = Colors.blue.shade700;
+        break;
+      case 'ENDED_LATE':
+        backgroundColor = Colors.orange.shade50;
+        textColor = Colors.orange.shade700;
+        break;
+      default:
+        backgroundColor = Colors.grey.shade50;
+        textColor = Colors.grey.shade700;
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        status,
+        style: TextStyle(
+          color: textColor,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _endProject(BuildContext context, String projectId) async {
+    setState(() => _actionLoading = true);
+    try {
+      await ref.read(appControllerProvider).endProject(projectId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Project ended successfully.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to end project: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _actionLoading = false);
+      }
+    }
+  }
+
+  Future<void> _extendDeadline(BuildContext context, String projectId, DateTime currentDeadline) async {
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: currentDeadline.isAfter(DateTime.now()) ? currentDeadline : DateTime.now().add(const Duration(days: 1)),
+      firstDate: DateTime.now().add(const Duration(days: 1)),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+    );
+
+    if (pickedDate == null || !mounted) {
+      return;
+    }
+
+    setState(() => _actionLoading = true);
+    try {
+      await ref.read(appControllerProvider).extendDeadline(projectId, pickedDate);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Project deadline extended successfully.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to extend deadline: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _actionLoading = false);
+      }
+    }
   }
 }
 

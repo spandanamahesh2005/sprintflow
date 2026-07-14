@@ -30,6 +30,15 @@ export class Project {
     @Prop({ type: Types.ObjectId, ref: 'User', required: true })
     ownerId: Types.ObjectId;
 
+    @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+    createdBy: Types.ObjectId;
+
+    @Prop({ type: String, default: 'ACTIVE' })
+    status: string;
+
+    @Prop({ type: Date, required: true })
+    deadline: Date;
+
     @Prop([ProjectMember])
     members: ProjectMember[];
 

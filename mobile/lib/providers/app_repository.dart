@@ -164,6 +164,9 @@ class AppRepository {
         ownerId: 'local',
         currentSprintNumber: 0,
         members: const <ProjectMember>[],
+        createdBy: const ProjectCreator(id: 'local', name: 'Local Host', email: 'local@host.com'),
+        status: 'ACTIVE',
+        deadline: DateTime.now().add(const Duration(days: 30)),
       );
       final cache = await _readProjectsCache();
       await _localStore.writeJson(
@@ -172,6 +175,40 @@ class AppRepository {
       );
       return fakeProject;
     }
+  }
+
+  Future<ProjectModel> endProject(String projectId) async {
+    final response = await _apiClient.endProject(projectId);
+    final project = ProjectModel.fromJson(response.data ?? <String, dynamic>{});
+    try {
+      final cache = await _readProjectsCache();
+      final index = cache.indexWhere((p) => p.id == projectId);
+      if (index != -1) {
+        cache[index] = project;
+        await _localStore.writeJson(
+          AppConstants.projectsCacheKey,
+          cache.map((p) => p.toJson()).toList(),
+        );
+      }
+    } catch (_) {}
+    return project;
+  }
+
+  Future<ProjectModel> extendDeadline(String projectId, DateTime newDeadline) async {
+    final response = await _apiClient.extendDeadline(projectId, newDeadline);
+    final project = ProjectModel.fromJson(response.data ?? <String, dynamic>{});
+    try {
+      final cache = await _readProjectsCache();
+      final index = cache.indexWhere((p) => p.id == projectId);
+      if (index != -1) {
+        cache[index] = project;
+        await _localStore.writeJson(
+          AppConstants.projectsCacheKey,
+          cache.map((p) => p.toJson()).toList(),
+        );
+      }
+    } catch (_) {}
+    return project;
   }
 
   Future<List<TaskModel>> fetchBacklog(String projectId) async {
