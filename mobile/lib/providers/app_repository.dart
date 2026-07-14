@@ -143,11 +143,19 @@ class AppRepository {
     }
   }
 
-  Future<ProjectModel> createProject({required String name, required String description}) async {
+  Future<ProjectModel> createProject({
+    required String name,
+    required String description,
+    required DateTime deadline,
+  }) async {
     try {
       final response = await _apiClient.dio.post<Map<String, dynamic>>(
         '/projects',
-        data: <String, dynamic>{'name': name, 'description': description},
+        data: <String, dynamic>{
+          'name': name,
+          'description': description,
+          'deadline': deadline.toIso8601String(),
+        },
       );
       final project = ProjectModel.fromJson(response.data ?? <String, dynamic>{});
       final cache = await _readProjectsCache();
@@ -166,7 +174,7 @@ class AppRepository {
         members: const <ProjectMember>[],
         createdBy: const ProjectCreator(id: 'local', name: 'Local Host', email: 'local@host.com'),
         status: 'ACTIVE',
-        deadline: DateTime.now().add(const Duration(days: 30)),
+        deadline: deadline,
       );
       final cache = await _readProjectsCache();
       await _localStore.writeJson(

@@ -140,30 +140,99 @@ class ProjectsScreen extends ConsumerWidget {
   Future<void> _showCreateProjectDialog(BuildContext context, WidgetRef ref) async {
     final nameController = TextEditingController();
     final descriptionController = TextEditingController();
+    DateTime? selectedDeadline;
+    bool showValidationError = false;
 
     final formOk = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Create Project'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Project Name')),
-            const SizedBox(height: 8),
-            TextField(controller: descriptionController, decoration: const InputDecoration(labelText: 'Description')),
-          ],
-        ),
-        actions: <Widget>[
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Create')),
-        ],
-      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Create Project'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Project Name')),
+                  const SizedBox(height: 8),
+                  TextField(controller: descriptionController, decoration: const InputDecoration(labelText: 'Description')),
+                  const SizedBox(height: 16),
+                  Text('Deadline (Required)', style: Theme.of(context).textTheme.bodySmall),
+                  const SizedBox(height: 4),
+                  InkWell(
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now().add(const Duration(days: 1)),
+                        firstDate: DateTime.now().add(const Duration(days: 1)),
+                        lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
+                      );
+                      if (picked != null) {
+                        setState(() {
+                          selectedDeadline = picked;
+                          showValidationError = false;
+                        });
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.calendar_today, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            selectedDeadline == null
+                                ? 'Choose Deadline'
+                                : '${selectedDeadline!.year}-${selectedDeadline!.month.toString().padLeft(2, '0')}-${selectedDeadline!.day.toString().padLeft(2, '0')}',
+                            style: TextStyle(
+                              color: selectedDeadline == null && showValidationError ? Colors.red : null,
+                              fontWeight: selectedDeadline == null && showValidationError ? FontWeight.bold : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (showValidationError && selectedDeadline == null) ...[
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Please select a deadline date.',
+                      style: TextStyle(color: Colors.red, fontSize: 12),
+                    ),
+                  ],
+                ],
+              ),
+              actions: <Widget>[
+                TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                FilledButton(
+                  onPressed: () {
+                    if (selectedDeadline == null) {
+                      setState(() {
+                        showValidationError = true;
+                      });
+                      return;
+                    }
+                    Navigator.pop(context, true);
+                  },
+                  child: const Text('Create'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
 
-    if (formOk != true || nameController.text.trim().isEmpty) {
+    if (formOk != true || nameController.text.trim().isEmpty || selectedDeadline == null) {
       return;
     }
 
-    await ref.read(appControllerProvider).createProject(nameController.text.trim(), descriptionController.text.trim());
+    await ref.read(appControllerProvider).createProject(
+          nameController.text.trim(),
+          descriptionController.text.trim(),
+          selectedDeadline!,
+        );
   }
 }

@@ -221,8 +221,8 @@ class AppController extends ChangeNotifier {
     }
   }
 
-  Future<void> createProject(String name, String description) async {
-    final project = await _repository.createProject(name: name, description: description);
+  Future<void> createProject(String name, String description, DateTime deadline) async {
+    final project = await _repository.createProject(name: name, description: description, deadline: deadline);
     projects = <ProjectModel>[project, ...projects];
     notifyListeners();
   }
