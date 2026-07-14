@@ -160,19 +160,32 @@ class ProjectsScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   Text('Deadline (Required)', style: Theme.of(context).textTheme.bodySmall),
                   const SizedBox(height: 4),
-                  InkWell(
+                   InkWell(
                     onTap: () async {
-                      final picked = await showDatePicker(
+                      final pickedDate = await showDatePicker(
                         context: context,
                         initialDate: DateTime.now().add(const Duration(days: 1)),
                         firstDate: DateTime.now().add(const Duration(days: 1)),
                         lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
                       );
-                      if (picked != null) {
-                        setState(() {
-                          selectedDeadline = picked;
-                          showValidationError = false;
-                        });
+                      if (pickedDate != null) {
+                        if (!context.mounted) return;
+                        final pickedTime = await showTimePicker(
+                          context: context,
+                          initialTime: const TimeOfDay(hour: 17, minute: 0),
+                        );
+                        if (pickedTime != null) {
+                          setState(() {
+                            selectedDeadline = DateTime(
+                              pickedDate.year,
+                              pickedDate.month,
+                              pickedDate.day,
+                              pickedTime.hour,
+                              pickedTime.minute,
+                            );
+                            showValidationError = false;
+                          });
+                        }
                       }
                     },
                     borderRadius: BorderRadius.circular(8),
@@ -185,7 +198,7 @@ class ProjectsScreen extends ConsumerWidget {
                           Text(
                             selectedDeadline == null
                                 ? 'Choose Deadline'
-                                : '${selectedDeadline!.year}-${selectedDeadline!.month.toString().padLeft(2, '0')}-${selectedDeadline!.day.toString().padLeft(2, '0')}',
+                                : '${selectedDeadline!.year}-${selectedDeadline!.month.toString().padLeft(2, '0')}-${selectedDeadline!.day.toString().padLeft(2, '0')} ${selectedDeadline!.hour.toString().padLeft(2, '0')}:${selectedDeadline!.minute.toString().padLeft(2, '0')}',
                             style: TextStyle(
                               color: selectedDeadline == null && showValidationError ? Colors.red : null,
                               fontWeight: selectedDeadline == null && showValidationError ? FontWeight.bold : null,

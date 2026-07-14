@@ -283,7 +283,12 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
   }
 
   String _formatDate(DateTime date) {
-    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    final year = date.year;
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+    return '$year-$month-$day $hour:$minute';
   }
 
   Widget _buildStatusBadge(BuildContext context, String status) {
@@ -357,9 +362,26 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
       return;
     }
 
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(currentDeadline),
+    );
+
+    if (pickedTime == null || !mounted) {
+      return;
+    }
+
+    final combinedDateTime = DateTime(
+      pickedDate.year,
+      pickedDate.month,
+      pickedDate.day,
+      pickedTime.hour,
+      pickedTime.minute,
+    );
+
     setState(() => _actionLoading = true);
     try {
-      await ref.read(appControllerProvider).extendDeadline(projectId, pickedDate);
+      await ref.read(appControllerProvider).extendDeadline(projectId, combinedDateTime);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Project deadline extended successfully.')),
