@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../models/project_model.dart';
 import '../models/task_model.dart';
 import '../providers/app_state.dart';
 import 'sprint_screen.dart';
@@ -85,6 +86,10 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                         const SizedBox(width: 8),
                         const Text('Status: '),
                         _buildStatusBadge(context, project.status),
+                        if (_isOverdue(project)) ...[
+                          const SizedBox(width: 8),
+                          _buildOverdueBadge(context),
+                        ],
                       ],
                     ),
                     if (ref.watch(authControllerProvider).user?.id == project.createdBy.id && project.status == 'ACTIVE') ...[
@@ -324,6 +329,37 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
           fontSize: 10,
           fontWeight: FontWeight.bold,
         ),
+      ),
+    );
+  }
+
+  bool _isOverdue(ProjectModel project) {
+    return project.status.toUpperCase() == 'ACTIVE' &&
+        project.deadline.isBefore(DateTime.now());
+  }
+
+  Widget _buildOverdueBadge(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.red.shade200),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.warning_amber, size: 12, color: Colors.red.shade700),
+          const SizedBox(width: 4),
+          Text(
+            'Overdue',
+            style: TextStyle(
+              color: Colors.red.shade700,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }
