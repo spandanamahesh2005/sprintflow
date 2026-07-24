@@ -101,3 +101,5 @@ flutter test
 	- Falls back to local persisted cache using `shared_preferences`
 - Android app now supports HTTP local-network backends (`android:usesCleartextTraffic="true"`).
 # Agile-Sprint-Simulation
+
+

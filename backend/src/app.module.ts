@@ -10,9 +10,9 @@ import { AuthModule } from './auth/auth.module';
 @Module({
     imports: [
         ConfigModule.forRoot({ isGlobal: true }),
-        MongooseModule.forRoot(
-            'mongodb://admin:password123@localhost:27017/agile-sim?authSource=admin'
-        ),
+     MongooseModule.forRoot(
+    'mongodb://localhost:27017/agile-sim'
+         ),
         UsersModule,
         ProjectsModule,
         SprintsModule,
